@@ -1,0 +1,70 @@
+name: Build cubiomes native libraries
+
+on:
+  push:
+    paths:
+      - 'src/main/native/cubiomes/**'
+      - '.github/workflows/build-cubiomes.yml'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Compile cubiomes
+        shell: bash
+        working-directory: src/main/native/cubiomes
+        run: |
+          gcc -shared -o cubiomes.dll noise.c biomes.c layers.c biomenoise.c generator.c finders.c util.c quadbase.c -O3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win32-x86-64
+          path: src/main/native/cubiomes/cubiomes.dll
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Compile cubiomes
+        working-directory: src/main/native/cubiomes
+        run: |
+          gcc -shared -fPIC -o libcubiomes.so noise.c biomes.c layers.c biomenoise.c generator.c finders.c util.c quadbase.c -O3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-x86-64
+          path: src/main/native/cubiomes/libcubiomes.so
+
+  build-macos-arm:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Compile cubiomes
+        working-directory: src/main/native/cubiomes
+        run: |
+          gcc -shared -fPIC -o libcubiomes.dylib noise.c biomes.c layers.c biomenoise.c generator.c finders.c util.c quadbase.c -O3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: darwin-aarch64
+          path: src/main/native/cubiomes/libcubiomes.dylib
+
+  build-macos-intel:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Compile cubiomes
+        working-directory: src/main/native/cubiomes
+        run: |
+          gcc -shared -fPIC -o libcubiomes.dylib noise.c biomes.c layers.c biomenoise.c generator.c finders.c util.c quadbase.c -O3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: darwin-x86-64
+          path: src/main/native/cubiomes/libcubiomes.dylib
