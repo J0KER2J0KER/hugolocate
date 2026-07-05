@@ -3,7 +3,7 @@ name: Build cubiomes native libraries
 on:
   push:
     paths:
-      - 'src/main/native/cubiomes/**'
+      - 'src/main/native/**'
       - '.github/workflows/build-cubiomes.yml'
   workflow_dispatch:
 
@@ -14,15 +14,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Compile cubiomes
+      - name: Compile cubiomes + wrapper
         shell: bash
-        working-directory: src/main/native/cubiomes
+        working-directory: src/main/native
         run: |
-          gcc -shared -o cubiomes.dll noise.c biomes.c layers.c biomenoise.c generator.c finders.c util.c quadbase.c -O3
+          gcc -shared -o hugolocate_wrapper.dll hugolocate_wrapper.c cubiomes/noise.c cubiomes/biomes.c cubiomes/layers.c cubiomes/biomenoise.c cubiomes/generator.c cubiomes/finders.c cubiomes/util.c cubiomes/quadbase.c -I cubiomes -O3
       - uses: actions/upload-artifact@v4
         with:
           name: win32-x86-64
-          path: src/main/native/cubiomes/cubiomes.dll
+          path: src/main/native/hugolocate_wrapper.dll
 
   build-linux:
     runs-on: ubuntu-latest
@@ -30,14 +30,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Compile cubiomes
-        working-directory: src/main/native/cubiomes
+      - name: Compile cubiomes + wrapper
+        working-directory: src/main/native
         run: |
-          gcc -shared -fPIC -o libcubiomes.so noise.c biomes.c layers.c biomenoise.c generator.c finders.c util.c quadbase.c -O3
+          gcc -shared -fPIC -o libhugolocate_wrapper.so hugolocate_wrapper.c cubiomes/noise.c cubiomes/biomes.c cubiomes/layers.c cubiomes/biomenoise.c cubiomes/generator.c cubiomes/finders.c cubiomes/util.c cubiomes/quadbase.c -I cubiomes -O3
       - uses: actions/upload-artifact@v4
         with:
           name: linux-x86-64
-          path: src/main/native/cubiomes/libcubiomes.so
+          path: src/main/native/libhugolocate_wrapper.so
 
   build-macos-arm:
     runs-on: macos-14
@@ -45,14 +45,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Compile cubiomes
-        working-directory: src/main/native/cubiomes
+      - name: Compile cubiomes + wrapper
+        working-directory: src/main/native
         run: |
-          gcc -shared -fPIC -o libcubiomes.dylib noise.c biomes.c layers.c biomenoise.c generator.c finders.c util.c quadbase.c -O3
+          gcc -shared -fPIC -o libhugolocate_wrapper.dylib hugolocate_wrapper.c cubiomes/noise.c cubiomes/biomes.c cubiomes/layers.c cubiomes/biomenoise.c cubiomes/generator.c cubiomes/finders.c cubiomes/util.c cubiomes/quadbase.c -I cubiomes -O3
       - uses: actions/upload-artifact@v4
         with:
           name: darwin-aarch64
-          path: src/main/native/cubiomes/libcubiomes.dylib
+          path: src/main/native/libhugolocate_wrapper.dylib
 
   build-macos-intel:
     runs-on: macos-13
@@ -60,11 +60,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Compile cubiomes
-        working-directory: src/main/native/cubiomes
+      - name: Compile cubiomes + wrapper
+        working-directory: src/main/native
         run: |
-          gcc -shared -fPIC -o libcubiomes.dylib noise.c biomes.c layers.c biomenoise.c generator.c finders.c util.c quadbase.c -O3
+          gcc -shared -fPIC -o libhugolocate_wrapper.dylib hugolocate_wrapper.c cubiomes/noise.c cubiomes/biomes.c cubiomes/layers.c cubiomes/biomenoise.c cubiomes/generator.c cubiomes/finders.c cubiomes/util.c cubiomes/quadbase.c -I cubiomes -O3
       - uses: actions/upload-artifact@v4
         with:
           name: darwin-x86-64
-          path: src/main/native/cubiomes/libcubiomes.dylib
+          path: src/main/native/libhugolocate_wrapper.dylib
