@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "hugolocate",
+  "version": "${version}",
+  "name": "hugolocate",
+  "description": "Locate structures on the minecraft server hugosmp",
+  "authors": [],
+  "contact": {},
+  "license": "GPL-3.0",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.j0ker2j0ker.hugolocate.client.HugolocateClient"
+    ]
+  },
+  "mixins": [
+    "hugolocate.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
