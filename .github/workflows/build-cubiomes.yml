@@ -53,18 +53,3 @@ jobs:
         with:
           name: darwin-aarch64
           path: src/main/native/libhugolocate_wrapper.dylib
-
-  build-macos-intel:
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-      - name: Compile cubiomes + wrapper
-        working-directory: src/main/native
-        run: |
-          gcc -shared -fPIC -o libhugolocate_wrapper.dylib hugolocate_wrapper.c cubiomes/noise.c cubiomes/biomes.c cubiomes/layers.c cubiomes/biomenoise.c cubiomes/generator.c cubiomes/finders.c cubiomes/util.c cubiomes/quadbase.c -I cubiomes -O3
-      - uses: actions/upload-artifact@v4
-        with:
-          name: darwin-x86-64
-          path: src/main/native/libhugolocate_wrapper.dylib
