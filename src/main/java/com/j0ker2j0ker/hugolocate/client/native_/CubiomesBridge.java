@@ -1,4 +1,4 @@
-package com.j0ker2j0ker.hugolocate.client;
+package com.j0ker2j0ker.hugolocate.client.native_;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
@@ -18,6 +18,8 @@ public class CubiomesBridge {
 
     // See cubiomes finders.h enum StructureType
     private static final int SHIPWRECK = 7;
+    private static final int MONUMENT = 8;
+    private static final int RUINED_PORTAL = 11; // overworld variant, not Ruined_Portal_N
 
     private interface CubiomesWrapper extends Library {
         CubiomesWrapper INSTANCE = Native.load("hugolocate_wrapper", CubiomesWrapper.class);
@@ -27,5 +29,13 @@ public class CubiomesBridge {
 
     public static boolean isViableShipwreckPos(long worldSeed, int x, int z) {
         return CubiomesWrapper.INSTANCE.hugolocate_is_viable(MC_1_21_WD, SHIPWRECK, worldSeed, x, z) != 0;
+    }
+
+    public static boolean isViableRuinedPortalPos(long worldSeed, int x, int z) {
+        return CubiomesWrapper.INSTANCE.hugolocate_is_viable(MC_1_21_WD, RUINED_PORTAL, worldSeed, x, z) != 0;
+    }
+
+    public static boolean isViableMonumentPos(long worldSeed, int x, int z) {
+        return CubiomesWrapper.INSTANCE.hugolocate_is_viable(MC_1_21_WD, MONUMENT, worldSeed, x, z) != 0;
     }
 }

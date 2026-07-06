@@ -1,21 +1,22 @@
-package com.j0ker2j0ker.hugolocate.client;
+package com.j0ker2j0ker.hugolocate.client.locate;
+
+import com.j0ker2j0ker.hugolocate.client.native_.CubiomesBridge;
 
 /**
- * Predicts shipwreck generation-attempt chunk positions from the region
- * seed formula. Does not check biome viability - that comes later via
- * a native cubiomes binding.
+ * Predicts ocean monument positions from the region seed formula and filters
+ * by biome viability via the native cubiomes binding (CubiomesBridge).
  */
-public class ShipwreckLocator {
+public class MonumentLocator {
 
     private static final long WORLD_SEED = -2394875239847523984L;
-    private static final long SALT = 2048571934L;
+    private static final long SALT = -558126589L;
 
-    private static final int REGION_SIZE = 24; // chunks per region
-    private static final int CHUNK_RANGE = 20; // spacing - separation = 24 - 4
+    private static final int REGION_SIZE = 32; // chunks per region
+    private static final int CHUNK_RANGE = 27; // sub-region range
 
     private static final long MASK_48 = (1L << 48) - 1;
 
-    /** Returns {chunkX, chunkZ} of the shipwreck attempt position for the given region. */
+    /** Returns {chunkX, chunkZ} of the monument attempt position for the given region. */
     public static long[] predictChunk(long worldSeed, long salt, long regX, long regZ) {
         long seed = worldSeed + regX * 341873128712L + regZ * 132897987541L + salt;
         seed ^= 0x5deece66dL;
@@ -41,29 +42,31 @@ public class ShipwreckLocator {
         return Math.floorDiv(coord, (long) REGION_SIZE * 16);
     }
 
-    /** Block position (with +9 attempt offset) of the nearest predicted shipwreck. */
-    public static long[] findNearest(long playerX, long playerZ, int searchRadiusRegions) {
+    /** Up to 3 nearest biome-viable predicted monument positions, sorted by distance. */
+    public static java.util.List<LocateResult> findNearest(long playerX, long playerZ, int searchRadiusRegions) {
         long playerRegX = regionOfBlock(playerX);
         long playerRegZ = regionOfBlock(playerZ);
 
-        long[] best = null;
-        double bestDist = Double.MAX_VALUE;
+        java.util.List<LocateResult> results = new java.util.ArrayList<>();
 
         for (int dx = -searchRadiusRegions; dx <= searchRadiusRegions; dx++) {
             for (int dz = -searchRadiusRegions; dz <= searchRadiusRegions; dz++) {
                 long regX = playerRegX + dx;
                 long regZ = playerRegZ + dz;
                 long[] chunk = predictChunk(WORLD_SEED, SALT, regX, regZ);
-                long blockX = chunk[0] * 16 + 9;
-                long blockZ = chunk[1] * 16 + 9;
+                long blockX = chunk[0] * 16; // no +9 offset - large structure placement
+                long blockZ = chunk[1] * 16;
+
+                if (!CubiomesBridge.isViableMonumentPos(WORLD_SEED, (int) blockX, (int) blockZ)) {
+                    continue;
+                }
 
                 double dist = Math.hypot(blockX - playerX, blockZ - playerZ);
-                if (dist < bestDist) {
-                    bestDist = dist;
-                    best = new long[]{blockX, blockZ};
-                }
+                results.add(new LocateResult(blockX, blockZ, dist));
             }
         }
-        return best;
+
+        results.sort(java.util.Comparator.comparingDouble(LocateResult::distance));
+        return results.subList(0, Math.min(3, results.size()));
     }
 }
