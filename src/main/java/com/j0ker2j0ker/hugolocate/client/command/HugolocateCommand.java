@@ -1,9 +1,12 @@
 package com.j0ker2j0ker.hugolocate.client.command;
 
+import com.j0ker2j0ker.hugolocate.client.locate.BastionLocator;
+import com.j0ker2j0ker.hugolocate.client.locate.FortressLocator;
 import com.j0ker2j0ker.hugolocate.client.locate.LocateResult;
 import com.j0ker2j0ker.hugolocate.client.locate.MonumentLocator;
 import com.j0ker2j0ker.hugolocate.client.locate.RuinedPortalLocator;
 import com.j0ker2j0ker.hugolocate.client.locate.ShipwreckLocator;
+import com.j0ker2j0ker.hugolocate.client.locate.VillageLocator;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -13,13 +16,19 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;
+import java.util.Set;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
 public class HugolocateCommand {
 
-    private static final String[] STRUCTURES = {"shipwreck", "ruinedportal", "monument"};
+    private static final String[] STRUCTURES = {
+            "shipwreck", "ruinedportal", "monument", "village", "bastion", "fortress"
+    };
+
+    private static final Set<String> NETHER_STRUCTURES = Set.of("bastion", "fortress");
+    private static final Set<String> OVERWORLD_STRUCTURES = Set.of("shipwreck", "ruinedportal", "monument", "village");
 
     public static void register() {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
@@ -55,21 +64,40 @@ public class HugolocateCommand {
         return java.util.concurrent.CompletableFuture.completedFuture(suggestStructuresBlocking(builder));
     }
 
+   private static boolean isInNether(FabricClientCommandSource source) {
+        return source.getLevel().dimensionType().hasCeiling();
+    }
+
     private static int run(FabricClientCommandSource source, String struktur, Integer x, Integer z) {
+        String key = struktur.toLowerCase();
+
+        if (!List.of(STRUCTURES).contains(key)) {
+            source.sendError(Component.literal("Unbekannte Struktur: " + struktur + " (unterstützt: " + String.join(", ", STRUCTURES) + ")"));
+            return 0;
+        }
+
+        boolean inNether = isInNether(source);
+        if (NETHER_STRUCTURES.contains(key) && !inNether) {
+            source.sendError(Component.literal(key + " ist eine Nether-Struktur, du bist aber nicht im Nether."));
+            return 0;
+        }
+        if (OVERWORLD_STRUCTURES.contains(key) && inNether) {
+            source.sendError(Component.literal(key + " ist eine Overworld-Struktur, du bist aber im Nether."));
+            return 0;
+        }
+
         long playerX = x != null ? x : (long) source.getPosition().x;
         long playerZ = z != null ? z : (long) source.getPosition().z;
 
-        List<LocateResult> results;
-        if (struktur.equalsIgnoreCase("shipwreck")) {
-            results = ShipwreckLocator.findNearest(playerX, playerZ, 5);
-        } else if (struktur.equalsIgnoreCase("ruinedportal")) {
-            results = RuinedPortalLocator.findNearest(playerX, playerZ, 5);
-        } else if (struktur.equalsIgnoreCase("monument")) {
-            results = MonumentLocator.findNearest(playerX, playerZ, 5);
-        } else {
-            source.sendError(Component.literal("Unbekannte Struktur: " + struktur + " (unterstützt: shipwreck, ruinedportal, monument)"));
-            return 0;
-        }
+        List<LocateResult> results = switch (key) {
+            case "shipwreck" -> ShipwreckLocator.findNearest(playerX, playerZ, 5);
+            case "ruinedportal" -> RuinedPortalLocator.findNearest(playerX, playerZ, 5);
+            case "monument" -> MonumentLocator.findNearest(playerX, playerZ, 5);
+            case "village" -> VillageLocator.findNearest(playerX, playerZ, 5);
+            case "bastion" -> BastionLocator.findNearest(playerX, playerZ, 5);
+            case "fortress" -> FortressLocator.findNearest(playerX, playerZ, 5);
+            default -> List.of();
+        };
 
         if (results.isEmpty()) {
             source.sendError(Component.literal("Keine Struktur im Suchradius gefunden."));
