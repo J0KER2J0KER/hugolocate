@@ -89,6 +89,10 @@ public class HugolocateCommand {
         long playerX = x != null ? x : (long) source.getPosition().x;
         long playerZ = z != null ? z : (long) source.getPosition().z;
 
+        if(key.equals("bastion") || key.equals("fortress")) {
+            source.sendFeedback(Component.literal("Warnung: Es kann sein, dass die Mod Bastion und Festung verwechselt."));
+        }
+
         List<LocateResult> results = switch (key) {
             case "shipwreck" -> ShipwreckLocator.findNearest(playerX, playerZ, 5);
             case "ruinedportal" -> RuinedPortalLocator.findNearest(playerX, playerZ, 5);
